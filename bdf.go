@@ -14,7 +14,7 @@ import (
 
 func bdfToTigr(bdfBytes []byte, lowChar int, highChar int) (*image.NRGBA, error) {
 	font, err := bdf.Parse(bdfBytes)
-	if err != nil {
+	if err != nil || font.Size == 0 {
 		return nil, fmt.Errorf("failed to parse BDF: %w", err)
 	}
 

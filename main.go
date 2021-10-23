@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"image"
@@ -21,12 +22,12 @@ var options struct {
 }
 
 func main() {
-	flag.IntVar(&options.fontSize, "size", 12, "Font size in points (equals pixels at 72 DPI)")
-	flag.BoolVar(&options.measure, "mx", false, "Measure an 'X' to get point size")
-	flag.IntVar(&options.dpi, "dpi", 72, "DPI")
-	flag.Float64Var(&options.overSampling, "over", 1, "Oversampling factor")
+	flag.IntVar(&options.fontSize, "size", 12, "TTF font size in points (equals pixels at 72 DPI)")
+	flag.BoolVar(&options.measure, "mx", false, "Measure an 'X' to adjust TTF point size")
+	flag.IntVar(&options.dpi, "dpi", 72, "Render TTF at DPI")
+	flag.Float64Var(&options.overSampling, "over", 1, "TTF oversampling factor")
 	flag.Usage = func() {
-		fmt.Fprintf(flag.CommandLine.Output(), "Usage: tigrfont [options] <source BDF/TTF> <target PNG>\n")
+		fmt.Fprintf(flag.CommandLine.Output(), "Usage: tigrfont [options] <source BDF/TTF> <target PNG>\n\nOptions:\n")
 		flag.PrintDefaults()
 	}
 	flag.Parse()
@@ -48,17 +49,27 @@ func main() {
 	const lowChar = 32
 	const highChar = 255
 
-	var ttfErr error
-	var bdfErr error
-
-	image, ttfErr := ttfToTigr(fontBytes, lowChar, highChar)
-	if ttfErr != nil {
-		image, bdfErr = bdfToTigr(fontBytes, lowChar, highChar)
+	if bytes.Compare(fontBytes[0:4], []byte("OTTO")) == 0 {
+		fmt.Printf("Open type font not supported.\n")
+		os.Exit(1)
 	}
 
-	if bdfErr != nil {
-		fmt.Printf("Failed to render: %v, %v\n", ttfErr, bdfErr)
-		os.Exit(1)
+	var image *image.NRGBA
+
+	if bytes.Compare(fontBytes[0:4], []byte{0, 1, 0, 0}) == 0 {
+		image, err = ttfToTigr(fontBytes, lowChar, highChar)
+		if err != nil {
+			fmt.Printf("Failed to render TTF: %v\n", err)
+			os.Exit(1)
+		}
+	} else {
+		// Assume BDF file
+		image, err = bdfToTigr(fontBytes, lowChar, highChar)
+
+		if err != nil {
+			fmt.Printf("Failed to render BDF: %v\n", err)
+			os.Exit(1)
+		}
 	}
 
 	image = shrinkToFit(image)
