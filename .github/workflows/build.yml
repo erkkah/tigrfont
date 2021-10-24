@@ -1,0 +1,35 @@
+name: Build
+
+on:
+  push:
+    branches: '*'
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: ^1.16
+      id: go
+
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Build for intel linux
+      run: mkdir linux && GOOS=linux GOARCH=amd64 go build -v -o linux/tigrfont .
+
+    - name: Build for intel macos
+      run: mkdir macos && GOOS=darwin GOARCH=amd64 go build -v -o macintel/tigrfont .
+
+    - name: Build for arm macos
+      run: mkdir macos && GOOS=darwin GOARCH=arm64 go build -v -o macarm/tigrfont .
+
+    - name: Build for windows
+      run: mkdir windows && GOOS=windows GOARCH=amd64 go build -v -o windows/tigrfont.exe .
