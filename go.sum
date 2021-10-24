@@ -1,17 +1,11 @@
 github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 h1:DACJavvAHhabrF08vX0COfcOBJRhZ8lUbR+ZWIs0Y5g=
 github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0/go.mod h1:E/TSTwGwJL78qG/PmXZO1EjYhfJinVAhrmmHX6Z8B9k=
-github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646 h1:zYyBkD/k9seD2A7fsi6Oo2LfFZAehjjQMERAvZLEDnQ=
-github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646/go.mod h1:jpp1/29i3P1S/RLdc7JQKbRpFeM1dOBd8T9ki5s+AY8=
-github.com/zachomedia/go-bdf v0.0.0-20210125163434-77caf7cd9683 h1:RgvFE51NqT2IdD7ivvPiMfF/m0HshHceAzrPp4+B1/Q=
-github.com/zachomedia/go-bdf v0.0.0-20210125163434-77caf7cd9683/go.mod h1:7j8rs/cA4DZNLcIyjSNpeg5kYy0i9Md+bp6t4PnfPPA=
 github.com/zachomedia/go-bdf v0.0.0-20210522061406-1a147053be95 h1:93c2U94xDTBIxVHTf3SlkvrtC5O3754NK728n6YWGh0=
 github.com/zachomedia/go-bdf v0.0.0-20210522061406-1a147053be95/go.mod h1:FWqHpmEj39kZYjkb4y+GkFRwJofD3lP2k8ataoNlo2Y=
-golang.org/x/image v0.0.0-20210504121937-7319ad40d33e h1:PzJMNfFQx+QO9hrC1GwZ4BoPGeNGhfeQEgcQFArEjPk=
 golang.org/x/image v0.0.0-20210504121937-7319ad40d33e/go.mod h1:FeLwcggjj3mMvU+oOTbSwawSJRM1uh48EjtB4UJZlP0=
 golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d h1:RNPAfi2nHY7C2srAV8A49jpsYr0ADedCk1wq6fTMTvs=
 golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d/go.mod h1:023OzeP/+EPmXeapQh35lcL3II3LrY8Ic+EFFKVhULM=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
-golang.org/x/text v0.3.6 h1:aRYxNxv6iGQlyVaZmk6ZgYEDa+Jg18DxebPSrd6bg1M=
 golang.org/x/text v0.3.6/go.mod h1:5Zoc/QRtKVWzQhOtBMvqHzDpF6irO9z98xDceosuGiQ=
 golang.org/x/text v0.3.7 h1:olpwvP2KacW1ZWvsR7uQhoyTYvKAupfQrRGBFM352Gk=
 golang.org/x/text v0.3.7/go.mod h1:u+2+/6zg+i71rQMx5EYifcz6MCKuco9NR6JIITiCfzQ=
