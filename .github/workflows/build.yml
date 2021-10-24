@@ -26,10 +26,10 @@ jobs:
       run: mkdir linux && GOOS=linux GOARCH=amd64 go build -v -o linux/tigrfont .
 
     - name: Build for intel macos
-      run: mkdir macos && GOOS=darwin GOARCH=amd64 go build -v -o macintel/tigrfont .
+      run: mkdir macintel && GOOS=darwin GOARCH=amd64 go build -v -o macintel/tigrfont .
 
     - name: Build for arm macos
-      run: mkdir macos && GOOS=darwin GOARCH=arm64 go build -v -o macarm/tigrfont .
+      run: mkdir macarm && GOOS=darwin GOARCH=arm64 go build -v -o macarm/tigrfont .
 
     - name: Build for windows
       run: mkdir windows && GOOS=windows GOARCH=amd64 go build -v -o windows/tigrfont.exe .
