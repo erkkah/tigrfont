@@ -10,22 +10,18 @@ import (
 	"image/png"
 	"io/ioutil"
 	"os"
-
-	"github.com/nfnt/resize"
 )
 
 var options struct {
-	fontSize     int
-	measure      bool
-	dpi          int
-	overSampling float64
+	fontSize int
+	measure  bool
+	dpi      int
 }
 
 func main() {
 	flag.IntVar(&options.fontSize, "size", 12, "TTF font size in points (equals pixels at 72 DPI)")
-	flag.BoolVar(&options.measure, "mx", false, "Measure an 'X' to adjust TTF point size")
+	flag.BoolVar(&options.measure, "mx", false, "Measure an 'X' to get TTF point size")
 	flag.IntVar(&options.dpi, "dpi", 72, "Render TTF at DPI")
-	flag.Float64Var(&options.overSampling, "over", 1, "TTF oversampling factor")
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(), "Usage: tigrfont [options] <source BDF/TTF> <target PNG>\n\nOptions:\n")
 		flag.PrintDefaults()
@@ -74,8 +70,6 @@ func main() {
 
 	image = shrinkToFit(image)
 	frame(image, border)
-
-	_ = resize.Bicubic
 
 	pngFile, err := os.OpenFile(target, os.O_CREATE|os.O_RDWR, 0664)
 	if err != nil {

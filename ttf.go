@@ -5,11 +5,9 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
-	"math"
 
 	"github.com/golang/freetype"
 	"github.com/golang/freetype/truetype"
-	"github.com/nfnt/resize"
 	"golang.org/x/image/math/fixed"
 	"golang.org/x/text/encoding/charmap"
 )
@@ -41,7 +39,7 @@ func ttfToTigr(ttfBytes []byte, lowChar int, highChar int) (*image.NRGBA, error)
 }
 
 func renderTTFSheet(lowChar, highChar int, ctx *freetype.Context, font *truetype.Font) (*image.NRGBA, error) {
-	bg := image.NewUniform(color.NRGBA{0x00, 0x00, 0x00, 0x00})
+	bg := image.NewUniform(color.NRGBA{0x00, 0x00, 0xFF, 0x00})
 
 	destHeightPixels := ctx.PointToFixed(float64(options.fontSize)*1.5).Ceil() + 2
 	dest := image.NewNRGBA(image.Rect(0, 0, destHeightPixels, destHeightPixels))
@@ -64,8 +62,7 @@ func renderTTFSheet(lowChar, highChar int, ctx *freetype.Context, font *truetype
 }
 
 func renderTTFChars(lowChar, highChar int, ctx *freetype.Context, font *truetype.Font, dest draw.Image, border image.Image, bg image.Image) (int, error) {
-	overSampling := options.overSampling
-	ctx.SetDPI(float64(options.dpi) * overSampling)
+	ctx.SetDPI(float64(options.dpi))
 
 	src := image.White
 	ctx.SetSrc(src)
@@ -75,15 +72,13 @@ func renderTTFChars(lowChar, highChar int, ctx *freetype.Context, font *truetype
 	baseline := scale.Ceil()
 
 	// Assume no glyph is landscape
-	bufferWidth := int(float64(dest.Bounds().Inset(1).Dy()) * overSampling)
+	bufferWidth := int(float64(dest.Bounds().Inset(1).Dy()))
 	buffer := image.NewNRGBA(image.Rect(0, 0, bufferWidth, bufferWidth))
+
 	ctx.SetDst(buffer)
 	ctx.SetClip(buffer.Bounds())
 
-	xOffset := int(math.Ceil(overSampling))
-	buf2dest := func(x int) int {
-		return int(float64(x) / overSampling)
-	}
+	xOffset := 1
 
 	for c := lowChar; c <= highChar; c++ {
 		r := cp.DecodeByte(byte(c))
@@ -104,27 +99,16 @@ func renderTTFChars(lowChar, highChar int, ctx *freetype.Context, font *truetype
 		}
 		advance.X += leftSideAdjustment
 
-		if overSampling != 1 {
-			drawnWidth := advance.X.Ceil()
-			drawnImage := buffer.SubImage(image.Rect(0, 0, drawnWidth, buffer.Bounds().Dy()))
-			destWidth := uint(buf2dest(drawnWidth))
-			destHeight := uint(dest.Bounds().Inset(1).Dy())
-			resized := resize.Resize(destWidth, destHeight, drawnImage, resize.Bicubic)
-			buffer = resized.(*image.NRGBA)
-		}
-
-		destXOffset := buf2dest(xOffset)
-		draw.Draw(dest, image.Rect(destXOffset, 1, destXOffset+buffer.Bounds().Dx(), dest.Bounds().Dy()-1), buffer, image.ZP, draw.Src)
+		draw.Draw(dest, image.Rect(xOffset, 1, xOffset+buffer.Bounds().Dx(), dest.Bounds().Dy()-1), buffer, image.ZP, draw.Src)
 
 		xOffset += advance.X.Ceil()
 
-		destXOffset = buf2dest(xOffset)
-		draw.Draw(dest, image.Rect(destXOffset, 0, destXOffset+1, dest.Bounds().Dy()), border, image.ZP, draw.Src)
+		draw.Draw(dest, image.Rect(xOffset, 0, xOffset+1, dest.Bounds().Dy()), border, image.ZP, draw.Src)
 
-		xOffset += int(math.Ceil(overSampling))
+		xOffset += 1.0
 	}
 
-	return buf2dest(xOffset), nil
+	return xOffset, nil
 }
 
 func getPointSizeFromX(font *truetype.Font) (int, error) {
