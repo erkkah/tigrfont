@@ -1,13 +1,13 @@
-# tigrfont - creates bitmap font sheets for TIGR
+# tigrfont - bitmap font sheet generator for TIGR
 
 `tigrfont` is a commandline tool for creating bitmap font sheets
 for [TIGR] from TTF or [BDF] font files.
 
 TIGR font sheets are simply PNG files with rows of white characters on a transparent background, separated by single-colored borders:
 
-![](scaled.png)
+![](tigrsheet.png)
 
-> This is the default font included in TIGR, and has a drop shadow in black. The font sheets created by `tigrfont` will not have shadows.
+> This is the default font included in TIGR, and has a black drop shadow. The font sheets created by `tigrfont` don't have shadows.
 
 ## BDF to TIGR
 
@@ -36,9 +36,9 @@ Since apparent character height for a given point size varies a lot between font
 
 For example, running
 ```
-$ tigrfont -mx -size 10 myfont.ttf myfont.png
+$ tigrfont -mx -size 20 myfont.ttf myfont.png
 ```
-will render a font sheet at a size where a capital 'X' is 10 pixels high, since pixels equal points at 72 DPI.
+will render a font sheet at a size where a capital 'X' is 20 pixels high, since pixels equal points at 72 DPI.
 
 ## Codepage
 
@@ -49,7 +49,6 @@ If the created font sheets use CP-1252 (the default) it should be loaded like th
 Tigr* fontImage = tigrLoadImage("font.png");
 TigrFont* font = tigrLoadFont(fontImage, 1252);
 ```
-
 
 [TIGR]: https://github.com/erkkah/tigr
 [BDF]: https://en.wikipedia.org/wiki/Glyph_Bitmap_Distribution_Format
