@@ -25,10 +25,10 @@ var options struct {
 }
 
 func main() {
-	flag.IntVar(&options.fontSize, "size", 12, "TTF font size in points (equals pixels at 72 DPI)")
+	flag.IntVar(&options.fontSize, "size", 18, "TTF font size in points (equals pixels at 72 DPI)")
 	flag.BoolVar(&options.measure, "mx", false, "Measure an 'X' to get TTF point size")
 	flag.IntVar(&options.dpi, "dpi", 72, "Render TTF at DPI")
-	flag.IntVar(&options.codepage, "cp", CP1252, "TIGR codepage, 0 or 1252")
+	flag.IntVar(&options.codepage, "cp", CP1252, "Font sheet codepage, 0 or 1252")
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(), "Usage: tigrfont [options] <source BDF/TTF> <target PNG>\n\nOptions:\n")
 		flag.PrintDefaults()
@@ -105,7 +105,7 @@ func main() {
 	pngFile.Close()
 }
 
-var border = image.NewUniform(color.NRGBA{0xff, 0xff, 0x00, 0xff})
+var border = image.NewUniform(color.NRGBA{0x00, 0xAA, 0xCC, 0xff})
 
 func contentBounds(img *image.NRGBA) image.Rectangle {
 	minNonTransparentRow := img.Bounds().Max.Y
