@@ -12,16 +12,23 @@ import (
 	"os"
 )
 
+const (
+	ASCII  = 0
+	CP1252 = 1252
+)
+
 var options struct {
 	fontSize int
 	measure  bool
 	dpi      int
+	codepage int
 }
 
 func main() {
 	flag.IntVar(&options.fontSize, "size", 12, "TTF font size in points (equals pixels at 72 DPI)")
 	flag.BoolVar(&options.measure, "mx", false, "Measure an 'X' to get TTF point size")
 	flag.IntVar(&options.dpi, "dpi", 72, "Render TTF at DPI")
+	flag.IntVar(&options.codepage, "cp", CP1252, "TIGR codepage, 0 or 1252")
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(), "Usage: tigrfont [options] <source BDF/TTF> <target PNG>\n\nOptions:\n")
 		flag.PrintDefaults()
@@ -43,7 +50,17 @@ func main() {
 	}
 
 	const lowChar = 32
-	const highChar = 255
+	var highChar = 127
+
+	switch options.codepage {
+	case ASCII:
+		highChar = 127
+	case CP1252:
+		highChar = 255
+	default:
+		fmt.Printf("Invalid TIGR codepage: %v\n", options.codepage)
+		os.Exit(1)
+	}
 
 	if bytes.Compare(fontBytes[0:4], []byte("OTTO")) == 0 {
 		fmt.Printf("Open type font not supported.\n")
