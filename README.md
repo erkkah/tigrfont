@@ -30,7 +30,7 @@ YMMV :car:
 
 The font is rendered at a given dpi, by default 72.
 
-The font size is specified in points, by default 12.
+The font size is specified in points, by default 18.
 
 Since apparent character height for a given point size varies a lot between fonts, `tigrfont` can measure the height of an 'X' and adjust the effective point size to make the 'X' render with a height of the given point size.
 
