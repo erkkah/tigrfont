@@ -9,10 +9,18 @@ TIGR font sheets are simply PNG files with rows of white characters on a transpa
 
 > This is the default font included in TIGR, and has a black drop shadow. The font sheets created by `tigrfont` don't have shadows.
 
+## Installation
+
+Get [pre-built binaries](https://github.com/erkkah/tigrfont/releases) for Linux, Windows or OSX or install using your local golang setup:
+
+```console
+$ go install github.com/erkkah/tigrfont
+```
+
 ## BDF to TIGR
 
 Creating font sheets from BDF files is straightforward, since they are bitmap fonts already:
-```
+```console
 $ tigrfont 5x7.bdf 5x7.png
 ```
 
@@ -35,7 +43,7 @@ The font size is specified in points, by default 18.
 Since apparent character height for a given point size varies a lot between fonts, `tigrfont` can measure the height of an 'X' and adjust the effective point size to make the 'X' render with a height of the given point size.
 
 For example, running
-```
+```console
 $ tigrfont -mx -size 20 myfont.ttf myfont.png
 ```
 will render a font sheet at a size where a capital 'X' is 20 pixels high, since pixels equal points at 72 DPI.
