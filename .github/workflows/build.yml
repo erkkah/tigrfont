@@ -23,13 +23,13 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Build for intel linux
-      run: mkdir linux && GOOS=linux GOARCH=amd64 go build -v -o linux/tigrfont .
+      run: mkdir linux && GOOS=linux GOARCH=amd64 go build -v -o linux/tigrfont ./cmd/tigrfont
 
     - name: Build for intel macos
-      run: mkdir macintel && GOOS=darwin GOARCH=amd64 go build -v -o macintel/tigrfont .
+      run: mkdir macintel && GOOS=darwin GOARCH=amd64 go build -v -o macintel/tigrfont ./cmd/tigrfont
 
     - name: Build for arm macos
-      run: mkdir macarm && GOOS=darwin GOARCH=arm64 go build -v -o macarm/tigrfont .
+      run: mkdir macarm && GOOS=darwin GOARCH=arm64 go build -v -o macarm/tigrfont ./cmd/tigrfont
 
     - name: Build for windows
-      run: mkdir windows && GOOS=windows GOARCH=amd64 go build -v -o windows/tigrfont.exe .
+      run: mkdir windows && GOOS=windows GOARCH=amd64 go build -v -o windows/tigrfont.exe ./cmd/tigrfont

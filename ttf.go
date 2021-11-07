@@ -1,4 +1,4 @@
-package main
+package tigrfont
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 	"golang.org/x/text/encoding/charmap"
 )
 
-func ttfToTigr(ttfBytes []byte, lowChar int, highChar int) (*image.NRGBA, error) {
+func tigrFromTTF(options Options, ttfBytes []byte, lowChar int, highChar int) (*image.NRGBA, error) {
 	font, err := freetype.ParseFont(ttfBytes)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse TTF: %w", err)
@@ -20,17 +20,17 @@ func ttfToTigr(ttfBytes []byte, lowChar int, highChar int) (*image.NRGBA, error)
 
 	ctx := freetype.NewContext()
 	ctx.SetFont(font)
-	ctx.SetDPI(float64(options.dpi))
+	ctx.SetDPI(float64(options.DPI))
 
-	if options.measure {
-		options.fontSize, err = getPointSizeFromX(font)
+	if options.Measure {
+		options.FontSize, err = getPointSizeFromX(font, options.FontSize)
 		if err != nil {
 			return nil, fmt.Errorf("failed to measure TTF font: %w", err)
 		}
 	}
-	ctx.SetFontSize(float64(options.fontSize))
+	ctx.SetFontSize(float64(options.FontSize))
 
-	image, err := renderTTFSheet(lowChar, highChar, ctx, font)
+	image, err := renderTTFSheet(options.FontSize, lowChar, highChar, ctx, font)
 	if err != nil {
 		return nil, fmt.Errorf("failed to render TTF: %w", err)
 	}
@@ -38,13 +38,13 @@ func ttfToTigr(ttfBytes []byte, lowChar int, highChar int) (*image.NRGBA, error)
 	return image, nil
 }
 
-func renderTTFSheet(lowChar, highChar int, ctx *freetype.Context, font *truetype.Font) (*image.NRGBA, error) {
+func renderTTFSheet(fontSize, lowChar, highChar int, ctx *freetype.Context, font *truetype.Font) (*image.NRGBA, error) {
 	bg := image.NewUniform(color.NRGBA{0x00, 0x00, 0xFF, 0x00})
 
-	destHeightPixels := ctx.PointToFixed(float64(options.fontSize)*1.5).Ceil() + 2
+	destHeightPixels := ctx.PointToFixed(float64(fontSize)*1.5).Ceil() + 2
 	dest := image.NewNRGBA(image.Rect(0, 0, destHeightPixels, destHeightPixels))
 
-	actualWidth, err := renderTTFChars(lowChar, highChar, ctx, font, dest, border, bg)
+	actualWidth, err := renderTTFChars(fontSize, lowChar, highChar, ctx, font, dest, bg)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func renderTTFSheet(lowChar, highChar int, ctx *freetype.Context, font *truetype
 
 	draw.Draw(dest, dest.Bounds(), bg, image.ZP, draw.Src)
 
-	_, err = renderTTFChars(lowChar, highChar, ctx, font, dest, border, bg)
+	_, err = renderTTFChars(fontSize, lowChar, highChar, ctx, font, dest, bg)
 	if err != nil {
 		return nil, err
 	}
@@ -61,14 +61,12 @@ func renderTTFSheet(lowChar, highChar int, ctx *freetype.Context, font *truetype
 	return dest, nil
 }
 
-func renderTTFChars(lowChar, highChar int, ctx *freetype.Context, font *truetype.Font, dest draw.Image, border image.Image, bg image.Image) (int, error) {
-	ctx.SetDPI(float64(options.dpi))
-
+func renderTTFChars(fontSize, lowChar, highChar int, ctx *freetype.Context, font *truetype.Font, dest draw.Image, bg image.Image) (int, error) {
 	src := image.White
 	ctx.SetSrc(src)
 
 	cp := charmap.Windows1252
-	scale := ctx.PointToFixed(float64(options.fontSize))
+	scale := ctx.PointToFixed(float64(fontSize))
 	baseline := scale.Ceil()
 
 	// Assume no glyph is landscape
@@ -103,7 +101,7 @@ func renderTTFChars(lowChar, highChar int, ctx *freetype.Context, font *truetype
 
 		xOffset += advance.X.Ceil()
 
-		draw.Draw(dest, image.Rect(xOffset, 0, xOffset+1, dest.Bounds().Dy()), border, image.ZP, draw.Src)
+		draw.Draw(dest, image.Rect(xOffset, 0, xOffset+1, dest.Bounds().Dy()), Border, image.ZP, draw.Src)
 
 		xOffset += 1.0
 	}
@@ -111,20 +109,20 @@ func renderTTFChars(lowChar, highChar int, ctx *freetype.Context, font *truetype
 	return xOffset, nil
 }
 
-func getPointSizeFromX(font *truetype.Font) (int, error) {
+func getPointSizeFromX(font *truetype.Font, fontSize int) (int, error) {
 	ctx := freetype.NewContext()
 	ctx.SetFont(font)
 	ctx.SetDPI(72.0)
-	ctx.SetFontSize(float64(options.fontSize))
+	ctx.SetFontSize(float64(fontSize))
 
-	img, err := renderTTFSheet('X', 'X', ctx, font)
+	img, err := renderTTFSheet(fontSize, 'X', 'X', ctx, font)
 	if err != nil {
 		return 0, err
 	}
 
 	bounds := contentBounds(img)
 	actual := float64(bounds.Dy())
-	expected := float64(options.fontSize)
+	expected := float64(fontSize)
 	factor := expected / actual
 	return int(expected * factor), nil
 }

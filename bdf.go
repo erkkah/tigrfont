@@ -1,4 +1,4 @@
-package main
+package tigrfont
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 	"golang.org/x/text/encoding/charmap"
 )
 
-func bdfToTigr(bdfBytes []byte, lowChar int, highChar int) (*image.NRGBA, error) {
+func tigrFromBDF(bdfBytes []byte, lowChar int, highChar int) (*image.NRGBA, error) {
 	font, err := bdf.Parse(bdfBytes)
 	if err != nil || font.Size == 0 {
 		return nil, fmt.Errorf("failed to parse BDF: %w", err)
@@ -89,7 +89,7 @@ func renderBDFChars(allChars []byte, drawer xfont.Drawer) int {
 
 		xPos := drawer.Dot.X.Ceil() + min.X
 
-		draw.Draw(drawer.Dst, image.Rect(xPos, min.Y, xPos+1, max.Y+1), border, image.ZP, draw.Src)
+		draw.Draw(drawer.Dst, image.Rect(xPos, min.Y, xPos+1, max.Y+1), Border, image.ZP, draw.Src)
 		drawer.Dot.X += fixed.I(1)
 	}
 
