@@ -31,10 +31,12 @@ func renderFontSheet(lowChar, highChar int, face xfont.Face) (*image.NRGBA, erro
 		Dot:  startDot,
 	}
 
-	// Render once to measure width
-	destWidthPixels := renderFontChars(allChars, drawer)
+	// Render once to measure. We cannot trust metrics from above.
+	destWidthPixels, maxAscent, maxDescent := renderFontChars(allChars, drawer)
+	destHeightPixels = maxAscent + maxDescent + 2
+	startDot.Y = fixed.I(maxAscent)
 
-	// Render once more to get actual width image
+	// Render once more to get actual size image
 	dest = image.NewNRGBA(image.Rect(0, 0, destWidthPixels, destHeightPixels))
 	draw.Draw(dest, dest.Bounds(), bg, image.Point{}, draw.Src)
 
@@ -45,16 +47,25 @@ func renderFontSheet(lowChar, highChar int, face xfont.Face) (*image.NRGBA, erro
 	return dest, nil
 }
 
-func renderFontChars(allChars []byte, drawer xfont.Drawer) int {
+func renderFontChars(allChars []byte, drawer xfont.Drawer) (totalWidth, maxAscent, maxDescent int) {
 	cp := charmap.Windows1252
 
-	min := drawer.Dst.Bounds().Min
-	max := drawer.Dst.Bounds().Max
+	dstMin := drawer.Dst.Bounds().Min
+	dstMax := drawer.Dst.Bounds().Max
+
+	minY := fixed.I(10000)
+	maxY := fixed.I(-10000)
 
 	for _, c := range allChars {
 		r := cp.DecodeByte(byte(c))
 		s := string(r)
 		bounds, advance, _ := drawer.Face.GlyphBounds(r)
+		if bounds.Min.Y < minY {
+			minY = bounds.Min.Y
+		}
+		if bounds.Max.Y > maxY {
+			maxY = bounds.Max.Y
+		}
 		if bounds.Min.X < 0 {
 			drawer.Dot.X += -bounds.Min.X
 		}
@@ -71,11 +82,14 @@ func renderFontChars(allChars []byte, drawer xfont.Drawer) int {
 			drawer.Dot.X += width
 		}
 
-		xPos := drawer.Dot.X.Ceil() + min.X
+		xPos := drawer.Dot.X.Ceil() + dstMin.X
 
-		draw.Draw(drawer.Dst, image.Rect(xPos, min.Y, xPos+1, max.Y+1), Border, image.Point{}, draw.Src)
+		draw.Draw(drawer.Dst, image.Rect(xPos, dstMin.Y, xPos+1, dstMax.Y+1), Border, image.Point{}, draw.Src)
 		drawer.Dot.X += fixed.I(1)
 	}
 
-	return drawer.Dot.X.Ceil()
+	totalWidth = drawer.Dot.X.Ceil()
+	maxAscent = (-minY).Ceil()
+	maxDescent = maxY.Ceil()
+	return
 }
