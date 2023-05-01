@@ -1,11 +1,9 @@
 package tigrfont
 
 import (
-	"bytes"
 	"fmt"
 	"image"
 	"image/png"
-	"io/ioutil"
 	"os"
 )
 
@@ -16,7 +14,7 @@ const (
 
 func Convert(options Options, font, target string) error {
 
-	fontBytes, err := ioutil.ReadFile(font)
+	fontBytes, err := os.ReadFile(font)
 	if err != nil {
 		return fmt.Errorf("failed to load font file: %w", err)
 	}
@@ -33,23 +31,17 @@ func Convert(options Options, font, target string) error {
 		return fmt.Errorf("invalid TIGR codepage: %v", options.Codepage)
 	}
 
-	if bytes.Compare(fontBytes[0:4], []byte("OTTO")) == 0 {
-		return fmt.Errorf("open type font not supported")
-	}
-
 	var image *image.NRGBA
 
-	if bytes.Compare(fontBytes[0:4], []byte{0, 1, 0, 0}) == 0 {
-		image, err = tigrFromTTF(options, fontBytes, lowChar, highChar)
-		if err != nil {
-			return fmt.Errorf("failed to render TTF: %v", err)
-		}
-	} else {
+	// Try TTF first
+	image, err = tigrFromTTF(options, fontBytes, lowChar, highChar)
+
+	if err != nil {
 		// Assume BDF file
 		image, err = tigrFromBDF(fontBytes, lowChar, highChar)
 
 		if err != nil {
-			return fmt.Errorf("failed to render BDF: %v", err)
+			return fmt.Errorf("failed to render font")
 		}
 	}
 
