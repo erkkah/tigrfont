@@ -59,8 +59,8 @@ func frame(dest draw.Image, border image.Image) {
 	maxX := minX + dest.Bounds().Dx()
 	maxY := minY + dest.Bounds().Dy()
 
-	draw.Draw(dest, image.Rect(minX, minY, maxX, minY+1), border, image.ZP, draw.Src)
-	draw.Draw(dest, image.Rect(maxX-1, minY, maxX, maxY), border, image.ZP, draw.Src)
-	draw.Draw(dest, image.Rect(minX, maxY-1, maxX, maxY), border, image.ZP, draw.Src)
-	draw.Draw(dest, image.Rect(minX, minY, 1, maxY), border, image.ZP, draw.Src)
+	draw.Draw(dest, image.Rect(minX, minY, maxX, minY+1), border, image.Point{}, draw.Src)
+	draw.Draw(dest, image.Rect(maxX-1, minY, maxX, maxY), border, image.Point{}, draw.Src)
+	draw.Draw(dest, image.Rect(minX, maxY-1, maxX, maxY), border, image.Point{}, draw.Src)
+	draw.Draw(dest, image.Rect(minX, minY, 1, maxY), border, image.Point{}, draw.Src)
 }
