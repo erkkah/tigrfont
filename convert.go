@@ -7,50 +7,99 @@ import (
 	"os"
 )
 
+type Codepage int
+
 const (
-	ASCII  = 0
-	CP1252 = 1252
+	ASCII   Codepage = 0
+	CP1252  Codepage = 1252
+	UNICODE Codepage = 12001
 )
 
-func Convert(options Options, font, target string) error {
+func (cp Codepage) String() string {
+	switch cp {
+	case ASCII:
+		return "ascii"
+	case CP1252:
+		return "windows 1252"
+	case UNICODE:
+		return "unicode"
+	default:
+		return "invalid"
+	}
+}
+
+func Convert(options Options, font, target string) (int, error) {
+	var runeSet []rune
+	var err error
+
+	if len(options.Encoding) > 0 && len(options.SampleFile) > 0 {
+		return 0, fmt.Errorf("cannot specify both encoding and sample file")
+	}
+
+	replaceMode := replaceMissing
+
+	if len(options.Encoding) > 0 {
+		runeSet, err = runesFromEncoding(options.Encoding)
+		if err != nil {
+			return 0, fmt.Errorf("failed to extract characters from encoding %q: %w", options.Encoding, err)
+		}
+		replaceMode = removeMissing
+		options.Codepage = UNICODE
+	}
+
+	if len(options.SampleFile) > 0 {
+		runeSet, err = runesFromFile(options.SampleFile)
+		if err != nil {
+			return 0, fmt.Errorf("failed to extract characters from sample %q: %w", options.SampleFile, err)
+		}
+		replaceMode = removeMissing
+		options.Codepage = UNICODE
+	}
+
+	if len(runeSet) == 0 {
+		const lowChar = 32
+		var highChar = 127
+
+		switch options.Codepage {
+		case ASCII:
+			highChar = 127
+		case CP1252:
+			highChar = 255
+		case UNICODE:
+			return 0, fmt.Errorf("use encoding or sample file to create UNICODE sheet")
+		default:
+			return 0, fmt.Errorf("invalid TIGR codepage: %v", options.Codepage)
+		}
+
+		runeSet = runesFromRange(lowChar, highChar)
+	}
 
 	fontBytes, err := os.ReadFile(font)
 	if err != nil {
-		return fmt.Errorf("failed to load font file: %w", err)
-	}
-
-	const lowChar = 32
-	var highChar = 127
-
-	switch options.Codepage {
-	case ASCII:
-		highChar = 127
-	case CP1252:
-		highChar = 255
-	default:
-		return fmt.Errorf("invalid TIGR codepage: %v", options.Codepage)
+		return 0, fmt.Errorf("failed to load font file: %w", err)
 	}
 
 	var image *image.NRGBA
+	var rendered int
 
 	// Try TTF first
-	image, err = tigrFromTTF(options, fontBytes, lowChar, highChar)
+	image, rendered, err = tigrFromTTF(options, fontBytes, runeSet, replaceMode)
 
 	if err != nil {
 		// Assume BDF file
-		image, err = tigrFromBDF(fontBytes, lowChar, highChar)
+		image, rendered, err = tigrFromBDF(fontBytes, runeSet, replaceMode)
 
 		if err != nil {
-			return fmt.Errorf("failed to render font")
+			return 0, fmt.Errorf("failed to render font")
 		}
 	}
 
 	image = shrinkToFit(image)
 	frame(image, Border)
 
-	pngFile, err := os.OpenFile(target, os.O_CREATE|os.O_RDWR, 0664)
+	pngFile, err := os.OpenFile(target, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0664)
 	if err != nil {
-		return fmt.Errorf("failed to open target %q: %v", target, err)
+		return 0, fmt.Errorf("failed to open target %q: %v", target, err)
 	}
 	defer pngFile.Close()
 
@@ -59,7 +108,8 @@ func Convert(options Options, font, target string) error {
 	}
 	err = encoder.Encode(pngFile, image)
 	if err != nil {
-		return fmt.Errorf("failed to encode PNG: %v", err)
+		return 0, fmt.Errorf("failed to encode PNG: %v", err)
 	}
-	return nil
+
+	return rendered, nil
 }

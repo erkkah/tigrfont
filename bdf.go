@@ -7,16 +7,16 @@ import (
 	"github.com/zachomedia/go-bdf"
 )
 
-func tigrFromBDF(bdfBytes []byte, lowChar int, highChar int) (*image.NRGBA, error) {
+func tigrFromBDF(bdfBytes []byte, runeSet []rune, mode missingGlyphMode) (*image.NRGBA, int, error) {
 	font, err := bdf.Parse(bdfBytes)
 	if err != nil || font.Size == 0 {
-		return nil, fmt.Errorf("failed to parse BDF")
+		return nil, 0, fmt.Errorf("failed to parse BDF")
 	}
 
 	face := font.NewFace()
-	image, err := renderFontSheet(lowChar, highChar, face)
+	image, rendered, err := renderFontSheet(runeSet, face, mode)
 	if err != nil {
-		return nil, fmt.Errorf("failed to render BDF: %w", err)
+		return nil, 0, fmt.Errorf("failed to render BDF: %w", err)
 	}
-	return image, nil
+	return image, rendered, nil
 }

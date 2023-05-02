@@ -6,10 +6,13 @@ import (
 )
 
 type Options struct {
-	FontSize int
-	Measure  bool
-	DPI      int
-	Codepage int
+	FontSize   int
+	MeasureX   bool
+	Measure    string
+	DPI        int
+	Codepage   Codepage
+	Encoding   string
+	SampleFile string
 }
 
 var Border = image.NewUniform(color.NRGBA{0x00, 0xAA, 0xCC, 0xff})
