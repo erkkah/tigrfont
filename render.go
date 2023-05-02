@@ -7,16 +7,18 @@ import (
 
 	xfont "golang.org/x/image/font"
 	"golang.org/x/image/math/fixed"
-	"golang.org/x/text/encoding/charmap"
 )
 
-func renderFontSheet(lowChar, highChar int, face xfont.Face) (*image.NRGBA, error) {
+type missingGlyphMode int
+
+const (
+	replaceMissing missingGlyphMode = 1
+	removeMissing  missingGlyphMode = 2
+)
+
+func renderFontSheet(runes []rune, face xfont.Face, mode missingGlyphMode) (*image.NRGBA, int, error) {
 	metrics := face.Metrics()
 
-	allChars := make([]byte, highChar-lowChar+1)
-	for i := range allChars {
-		allChars[i] = byte(lowChar + i)
-	}
 	destHeightPixels := metrics.Height.Ceil() + 2
 	dest := image.NewNRGBA(image.Rect(0, 0, destHeightPixels, destHeightPixels))
 
@@ -32,7 +34,7 @@ func renderFontSheet(lowChar, highChar int, face xfont.Face) (*image.NRGBA, erro
 	}
 
 	// Render once to measure. We cannot trust metrics from above.
-	destWidthPixels, maxAscent, maxDescent := renderFontChars(allChars, drawer)
+	destWidthPixels, maxAscent, maxDescent, runesRendered := renderFontChars(runes, drawer, mode)
 	destHeightPixels = maxAscent + maxDescent + 2
 	startDot.Y = fixed.I(maxAscent)
 
@@ -42,13 +44,14 @@ func renderFontSheet(lowChar, highChar int, face xfont.Face) (*image.NRGBA, erro
 
 	drawer.Dst = dest
 	drawer.Dot = startDot
-	renderFontChars(allChars, drawer)
+	renderFontChars(runes, drawer, mode)
 
-	return dest, nil
+	return dest, runesRendered, nil
 }
 
-func renderFontChars(allChars []byte, drawer xfont.Drawer) (totalWidth, maxAscent, maxDescent int) {
-	cp := charmap.Windows1252
+func renderFontChars(
+	allRunes []rune, drawer xfont.Drawer, mode missingGlyphMode,
+) (totalWidth, maxAscent, maxDescent, runesRendered int) {
 
 	dstMin := drawer.Dst.Bounds().Min
 	dstMax := drawer.Dst.Bounds().Max
@@ -56,10 +59,13 @@ func renderFontChars(allChars []byte, drawer xfont.Drawer) (totalWidth, maxAscen
 	minY := fixed.I(10000)
 	maxY := fixed.I(-10000)
 
-	for _, c := range allChars {
-		r := cp.DecodeByte(byte(c))
+	for _, r := range allRunes {
 		s := string(r)
-		bounds, advance, _ := drawer.Face.GlyphBounds(r)
+		bounds, advance, exists := drawer.Face.GlyphBounds(r)
+		if !exists && mode == removeMissing {
+			continue
+		}
+
 		if bounds.Min.Y < minY {
 			minY = bounds.Min.Y
 		}
@@ -86,6 +92,7 @@ func renderFontChars(allChars []byte, drawer xfont.Drawer) (totalWidth, maxAscen
 
 		draw.Draw(drawer.Dst, image.Rect(xPos, dstMin.Y, xPos+1, dstMax.Y+1), Border, image.Point{}, draw.Src)
 		drawer.Dot.X += fixed.I(1)
+		runesRendered++
 	}
 
 	totalWidth = drawer.Dot.X.Ceil()

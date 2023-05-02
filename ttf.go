@@ -8,16 +8,21 @@ import (
 	"golang.org/x/image/font/opentype"
 )
 
-func tigrFromTTF(options Options, ttfBytes []byte, lowChar int, highChar int) (*image.NRGBA, error) {
+func tigrFromTTF(options Options, ttfBytes []byte, runeSet []rune, mode missingGlyphMode) (*image.NRGBA, int, error) {
 	font, err := opentype.Parse(ttfBytes)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse TTF: %w", err)
+		return nil, 0, fmt.Errorf("failed to parse TTF: %w", err)
 	}
 
-	if options.Measure {
-		options.FontSize, err = getPointSizeFromX(font, options.FontSize)
+	if options.MeasureX {
+		options.Measure = "X"
+	}
+
+	if len(options.Measure) > 0 {
+		measure := []rune(options.Measure)[0]
+		options.FontSize, err = getPointSizeFrom(font, options.FontSize, measure)
 		if err != nil {
-			return nil, fmt.Errorf("failed to measure TTF font: %w", err)
+			return nil, 0, fmt.Errorf("failed to measure char %q: %w", measure, err)
 		}
 	}
 
@@ -27,18 +32,18 @@ func tigrFromTTF(options Options, ttfBytes []byte, lowChar int, highChar int) (*
 		Hinting: xfont.HintingFull,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create font face: %w", err)
+		return nil, 0, fmt.Errorf("failed to create font face: %w", err)
 	}
 
-	image, err := renderFontSheet(lowChar, highChar, face)
+	image, rendered, err := renderFontSheet(runeSet, face, mode)
 	if err != nil {
-		return nil, fmt.Errorf("failed to render TTF: %w", err)
+		return nil, 0, fmt.Errorf("failed to render TTF: %w", err)
 	}
 
-	return image, nil
+	return image, rendered, nil
 }
 
-func getPointSizeFromX(font *opentype.Font, fontSize int) (int, error) {
+func getPointSizeFrom(font *opentype.Font, fontSize int, char rune) (int, error) {
 	face, err := opentype.NewFace(
 		font,
 		&opentype.FaceOptions{
@@ -48,7 +53,11 @@ func getPointSizeFromX(font *opentype.Font, fontSize int) (int, error) {
 		return 0, err
 	}
 
-	img, err := renderFontSheet('X', 'X', face)
+	img, rendered, err := renderFontSheet([]rune{char}, face, removeMissing)
+	if rendered == 0 {
+		return 0, fmt.Errorf("cannot measure non-existant char %q", string(char))
+	}
+
 	if err != nil {
 		return 0, err
 	}
