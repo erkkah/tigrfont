@@ -1,7 +1,7 @@
 # tigrfont - bitmap font sheet generator for TIGR
 
 `tigrfont` is a commandline tool for creating bitmap font sheets
-for [TIGR] from TTF or [BDF] font files.
+for [TIGR] from TTF/OTF or [BDF] font files.
 
 TIGR font sheets are simply PNG files with rows of white characters on a transparent background, separated by single-colored borders:
 
@@ -48,15 +48,31 @@ $ tigrfont -mx -size 20 myfont.ttf myfont.png
 ```
 will render a font sheet at a size where a capital 'X' is 20 pixels high, since pixels equal points at 72 DPI.
 
-## Codepage
+> You can also use `-m <char>` to measure using any character.
 
-TIGR, and `tigrfont` support two codepages, ASCII and CP-1252.
-If the created font sheets use CP-1252 (the default) it should be loaded like this:
+## Unicode and codepages
+
+TIGR, and `tigrfont` traditionally support two codepages, ASCII (code points 32 to 127) and CP-1252 (code points 32 to 255).
+Font sheets created using CP-1252 (the default) are loaded like this:
 
 ```C
 Tigr* fontImage = tigrLoadImage("font.png");
-TigrFont* font = tigrLoadFont(fontImage, 1252);
+TigrFont* font = tigrLoadFont(fontImage, TCP_1252);
 ```
 
+### Unicode sheets
+
+Since version 1.0, `tigrfont` supports sparse unicode-encoded font sheets.
+Note that [TIGR] version 3.1 is needed to use these font sheets.
+
+Instead of simply enumerating code points, as in the ASCII and CP-1252 cases, the set of code points to include is specified using either the `-encoding` or the `-sample` option.
+
+The `-encoding` argument accepts an [HTML5 encoding name] and tries to extract the set of code points covered by that encoding. This often generates a superset of code points. For example, specifying "gbk" or "gb3212" results in the same large set of code points.
+
+Using the `-sample` option, you can specify a UTF-8 encoded text file containing the code points you want in the font sheet. Since duplicates are allowed, you can simply specify a sample text file with the code points needed.
+
+> If you look at the generated unicode font sheets, you might notice that there are semi-transparent sections in the borders around the characters. This is since the alpha channel is used to store code point info. :brain:
+
+[HTML5 encoding name]: https://encoding.spec.whatwg.org/#names-and-labels
 [TIGR]: https://github.com/erkkah/tigr
 [BDF]: https://en.wikipedia.org/wiki/Glyph_Bitmap_Distribution_Format
