@@ -48,5 +48,5 @@ func main() {
 		source = fmt.Sprintf(" from sample %q", options.SampleFile)
 	}
 
-	fmt.Printf("Generated a %s font sheet for %v characters%s\n", options.Codepage, generated, source)
+	fmt.Printf("Generated %s font sheet for %v characters%s\n", options.Codepage, generated, source)
 }

@@ -16,7 +16,7 @@ const (
 	removeMissing  missingGlyphMode = 2
 )
 
-func renderFontSheet(runes []rune, face xfont.Face, mode missingGlyphMode) (*image.NRGBA, int, error) {
+func renderFontSheet(runes []rune, face xfont.Face, mode missingGlyphMode, watermark bool) (*image.NRGBA, int, error) {
 	metrics := face.Metrics()
 
 	destHeightPixels := metrics.Height.Ceil() + 2
@@ -34,7 +34,7 @@ func renderFontSheet(runes []rune, face xfont.Face, mode missingGlyphMode) (*ima
 	}
 
 	// Render once to measure. We cannot trust metrics from above.
-	destWidthPixels, maxAscent, maxDescent, runesRendered := renderFontChars(runes, drawer, mode)
+	destWidthPixels, maxAscent, maxDescent, runesRendered := renderFontChars(runes, drawer, mode, false)
 	destHeightPixels = maxAscent + maxDescent + 2
 	startDot.Y = fixed.I(maxAscent)
 
@@ -44,17 +44,21 @@ func renderFontSheet(runes []rune, face xfont.Face, mode missingGlyphMode) (*ima
 
 	drawer.Dst = dest
 	drawer.Dot = startDot
-	renderFontChars(runes, drawer, mode)
+	renderFontChars(runes, drawer, mode, watermark)
+
+	drawHorizontalDivider(drawer.Dst, 0)
+	if watermark {
+		stampWatermark(drawer.Dst, 0, 1, rune(runesRendered))
+	}
 
 	return dest, runesRendered, nil
 }
 
 func renderFontChars(
-	allRunes []rune, drawer xfont.Drawer, mode missingGlyphMode,
+	allRunes []rune, drawer xfont.Drawer, mode missingGlyphMode, watermark bool,
 ) (totalWidth, maxAscent, maxDescent, runesRendered int) {
 
 	dstMin := drawer.Dst.Bounds().Min
-	dstMax := drawer.Dst.Bounds().Max
 
 	minY := fixed.I(10000)
 	maxY := fixed.I(-10000)
@@ -90,7 +94,10 @@ func renderFontChars(
 
 		xPos := drawer.Dot.X.Ceil() + dstMin.X
 
-		draw.Draw(drawer.Dst, image.Rect(xPos, dstMin.Y, xPos+1, dstMax.Y+1), Border, image.Point{}, draw.Src)
+		drawHorizontalDivider(drawer.Dst, xPos)
+		if watermark {
+			stampWatermark(drawer.Dst, xPos, dstMin.Y+1, r)
+		}
 		drawer.Dot.X += fixed.I(1)
 		runesRendered++
 	}
@@ -99,4 +106,26 @@ func renderFontChars(
 	maxAscent = (-minY).Ceil()
 	maxDescent = maxY.Ceil()
 	return
+}
+
+func drawHorizontalDivider(dest draw.Image, x int) {
+	draw.Draw(dest, image.Rect(x, dest.Bounds().Min.Y, x+1, dest.Bounds().Max.Y+1), Border, image.Point{}, draw.Src)
+}
+
+func stampWatermark(dest draw.Image, x0, y0 int, char rune) {
+	mark := [6]uint32{
+		uint32(0b10101010),
+		uint32(char & 0xff),
+		uint32((char >> 8) & 0xff),
+		uint32((char >> 16) & 0xff),
+		uint32((char >> 24) & 0xff),
+		uint32(0b01010101),
+	}
+
+	for i, m := range mark {
+		pixel := dest.At(x0, y0+i)
+		r, g, b, _ := pixel.RGBA()
+
+		dest.Set(x0, y0+i, color.NRGBA{uint8(r), uint8(g), uint8(b), uint8(m)})
+	}
 }
