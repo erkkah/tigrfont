@@ -8,7 +8,7 @@ import (
 	"golang.org/x/image/font/opentype"
 )
 
-func tigrFromTTF(options Options, ttfBytes []byte, runeSet []rune, mode missingGlyphMode) (*image.NRGBA, int, error) {
+func tigrFromTTF(options Options, ttfBytes []byte, runeSet []rune, mode missingGlyphMode, watermark bool) (*image.NRGBA, int, error) {
 	font, err := opentype.Parse(ttfBytes)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to parse TTF: %w", err)
@@ -35,7 +35,7 @@ func tigrFromTTF(options Options, ttfBytes []byte, runeSet []rune, mode missingG
 		return nil, 0, fmt.Errorf("failed to create font face: %w", err)
 	}
 
-	image, rendered, err := renderFontSheet(runeSet, face, mode)
+	image, rendered, err := renderFontSheet(runeSet, face, mode, watermark)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to render TTF: %w", err)
 	}
@@ -53,7 +53,7 @@ func getPointSizeFrom(font *opentype.Font, fontSize int, char rune) (int, error)
 		return 0, err
 	}
 
-	img, rendered, err := renderFontSheet([]rune{char}, face, removeMissing)
+	img, rendered, err := renderFontSheet([]rune{char}, face, removeMissing, false)
 	if rendered == 0 {
 		return 0, fmt.Errorf("cannot measure non-existant char %q", string(char))
 	}

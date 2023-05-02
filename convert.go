@@ -37,6 +37,7 @@ func Convert(options Options, font, target string) (int, error) {
 	}
 
 	replaceMode := replaceMissing
+	watermark := false
 
 	if len(options.Encoding) > 0 {
 		runeSet, err = runesFromEncoding(options.Encoding)
@@ -44,6 +45,7 @@ func Convert(options Options, font, target string) (int, error) {
 			return 0, fmt.Errorf("failed to extract characters from encoding %q: %w", options.Encoding, err)
 		}
 		replaceMode = removeMissing
+		watermark = true
 		options.Codepage = UNICODE
 	}
 
@@ -53,6 +55,7 @@ func Convert(options Options, font, target string) (int, error) {
 			return 0, fmt.Errorf("failed to extract characters from sample %q: %w", options.SampleFile, err)
 		}
 		replaceMode = removeMissing
+		watermark = true
 		options.Codepage = UNICODE
 	}
 
@@ -66,7 +69,7 @@ func Convert(options Options, font, target string) (int, error) {
 		case CP1252:
 			highChar = 255
 		case UNICODE:
-			return 0, fmt.Errorf("use encoding or sample file to create UNICODE sheet")
+			return 0, fmt.Errorf("use encoding or sample file to create unicode sheet")
 		default:
 			return 0, fmt.Errorf("invalid TIGR codepage: %v", options.Codepage)
 		}
@@ -83,11 +86,11 @@ func Convert(options Options, font, target string) (int, error) {
 	var rendered int
 
 	// Try TTF first
-	image, rendered, err = tigrFromTTF(options, fontBytes, runeSet, replaceMode)
+	image, rendered, err = tigrFromTTF(options, fontBytes, runeSet, replaceMode, watermark)
 
 	if err != nil {
 		// Assume BDF file
-		image, rendered, err = tigrFromBDF(fontBytes, runeSet, replaceMode)
+		image, rendered, err = tigrFromBDF(fontBytes, runeSet, replaceMode, watermark)
 
 		if err != nil {
 			return 0, fmt.Errorf("failed to render font")

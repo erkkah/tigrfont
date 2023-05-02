@@ -59,8 +59,10 @@ func frame(dest draw.Image, border image.Image) {
 	maxX := minX + dest.Bounds().Dx()
 	maxY := minY + dest.Bounds().Dy()
 
+	// top
 	draw.Draw(dest, image.Rect(minX, minY, maxX, minY+1), border, image.Point{}, draw.Src)
-	draw.Draw(dest, image.Rect(maxX-1, minY, maxX, maxY), border, image.Point{}, draw.Src)
+	// bottom
 	draw.Draw(dest, image.Rect(minX, maxY-1, maxX, maxY), border, image.Point{}, draw.Src)
-	draw.Draw(dest, image.Rect(minX, minY, 1, maxY), border, image.Point{}, draw.Src)
+
+	// Skip left and right to avoid drawing over watermarks
 }
