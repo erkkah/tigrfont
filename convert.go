@@ -97,9 +97,6 @@ func Convert(options Options, font, target string) (int, error) {
 		}
 	}
 
-	image = shrinkToFit(image)
-	frame(image, Border)
-
 	pngFile, err := os.OpenFile(target, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0664)
 	if err != nil {
 		return 0, fmt.Errorf("failed to open target %q: %v", target, err)

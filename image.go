@@ -2,7 +2,6 @@ package tigrfont
 
 import (
 	"image"
-	"image/draw"
 )
 
 func contentBounds(img *image.NRGBA) image.Rectangle {
@@ -32,37 +31,4 @@ rows:
 	}
 
 	return image.Rect(img.Bounds().Min.X, minNonTransparentRow, img.Bounds().Max.X, maxNonTransparentRow)
-}
-
-func shrinkToFit(img *image.NRGBA) *image.NRGBA {
-	bounds := contentBounds(img)
-
-	if bounds.Min.Y > 0 {
-		bounds.Min.Y--
-	}
-	if bounds.Min.Y > 0 {
-		bounds.Min.Y--
-	}
-
-	if bounds.Max.Y < img.Bounds().Dy() {
-		bounds.Max.Y++
-	}
-	if bounds.Max.Y < img.Bounds().Dy() {
-		bounds.Max.Y++
-	}
-	return (img.SubImage(bounds)).(*image.NRGBA)
-}
-
-func frame(dest draw.Image, border image.Image) {
-	minX := dest.Bounds().Min.X
-	minY := dest.Bounds().Min.Y
-	maxX := minX + dest.Bounds().Dx()
-	maxY := minY + dest.Bounds().Dy()
-
-	// top
-	draw.Draw(dest, image.Rect(minX, minY, maxX, minY+1), border, image.Point{}, draw.Src)
-	// bottom
-	draw.Draw(dest, image.Rect(minX, maxY-1, maxX, maxY), border, image.Point{}, draw.Src)
-
-	// Skip left and right to avoid drawing over watermarks
 }
