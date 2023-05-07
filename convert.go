@@ -82,18 +82,25 @@ func Convert(options Options, font, target string) (int, error) {
 		return 0, fmt.Errorf("failed to load font file: %w", err)
 	}
 
-	var image *image.NRGBA
+	var img image.Image
 	var rendered int
 
 	// Try TTF first
-	image, rendered, err = tigrFromTTF(options, fontBytes, runeSet, replaceMode, watermark)
+	img, rendered, err = tigrFromTTF(options, fontBytes, runeSet, replaceMode, watermark)
 
 	if err != nil {
 		// Assume BDF file
-		image, rendered, err = tigrFromBDF(fontBytes, runeSet, replaceMode, watermark)
+		img, rendered, err = tigrFromBDF(fontBytes, runeSet, replaceMode, watermark)
 
 		if err != nil {
 			return 0, fmt.Errorf("failed to render font")
+		}
+	}
+
+	if watermark {
+		img, err = palettize(img)
+		if err != nil {
+			return 0, err
 		}
 	}
 
@@ -106,7 +113,8 @@ func Convert(options Options, font, target string) (int, error) {
 	encoder := png.Encoder{
 		CompressionLevel: png.BestCompression,
 	}
-	err = encoder.Encode(pngFile, image)
+
+	err = encoder.Encode(pngFile, img)
 	if err != nil {
 		return 0, fmt.Errorf("failed to encode PNG: %v", err)
 	}

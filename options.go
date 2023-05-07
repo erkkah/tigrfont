@@ -15,4 +15,5 @@ type Options struct {
 	SampleFile string
 }
 
-var Border = image.NewUniform(color.NRGBA{0x00, 0xAA, 0xCC, 0xff})
+var BorderColor = color.NRGBA{0x00, 0xAA, 0xCC, 0xff}
+var Border = image.NewUniform(BorderColor)
