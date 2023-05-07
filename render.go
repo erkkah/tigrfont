@@ -19,7 +19,7 @@ const (
 func renderFontSheet(runes []rune, face xfont.Face, mode missingGlyphMode, watermark bool) (*image.NRGBA, int, error) {
 	metrics := face.Metrics()
 
-	startDot := fixed.P(1, metrics.Ascent.Ceil()+1)
+	startDot := fixed.P(0, metrics.Ascent.Ceil()+1)
 	drawer := xfont.Drawer{
 		Dst:  image.NewNRGBA(image.Rect(0, 0, 1, 1)),
 		Src:  image.White,
@@ -34,7 +34,10 @@ func renderFontSheet(runes []rune, face xfont.Face, mode missingGlyphMode, water
 	destHeightPixels := rowHeightPixels * renderedRows
 	startDot.Y = fixed.I(maxAscent)
 
-	if !watermark {
+	if watermark {
+		// Skip initial watermark
+		startDot.X = fixed.I(1)
+	} else {
 		// bottom border
 		rowHeightPixels++
 
@@ -46,7 +49,6 @@ func renderFontSheet(runes []rune, face xfont.Face, mode missingGlyphMode, water
 	// Render once more to the actual sheet size
 	dest := image.NewNRGBA(image.Rect(0, 0, destWidthPixels, destHeightPixels))
 	clear(dest)
-	//draw.Draw(dest, dest.Bounds(), bg, image.Point{}, draw.Src)
 
 	drawer.Dst = dest
 	drawer.Dot = startDot
