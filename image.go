@@ -1,7 +1,6 @@
 package tigrfont
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 )
@@ -32,7 +31,7 @@ rows:
 		}
 	}
 
-	return image.Rect(img.Bounds().Min.X, minNonTransparentRow, img.Bounds().Max.X, maxNonTransparentRow)
+	return image.Rect(img.Bounds().Min.X, minNonTransparentRow, img.Bounds().Max.X, maxNonTransparentRow+1)
 }
 
 func whitePalette() color.Palette {
@@ -45,20 +44,15 @@ func whitePalette() color.Palette {
 	return p
 }
 
-func palettize(img image.Image) (image.Image, error) {
-	pi := image.NewPaletted(img.Bounds(), whitePalette())
+func palettize(img *image.NRGBA) (image.Image, error) {
+	palette := whitePalette()
+	pi := image.NewPaletted(img.Bounds(), palette)
 
-	for x := img.Bounds().Min.X; x <= img.Bounds().Max.X; x++ {
-		for y := img.Bounds().Min.Y; y <= img.Bounds().Max.Y; y++ {
-			src := img.At(x, y)
-			dst := pi.Palette.Convert(src)
+	for x := img.Bounds().Min.X; x < img.Bounds().Max.X; x++ {
+		for y := img.Bounds().Min.Y; y < img.Bounds().Max.Y; y++ {
+			alpha := img.Pix[img.PixOffset(x, y)+3]
 
-			sr, sg, sb, sa := src.RGBA()
-			dr, dg, db, da := dst.RGBA()
-			if sr != dr || sg != dg || sb != db || sa != da {
-				return pi, fmt.Errorf("palette image color mismatch")
-			}
-			pi.Set(x, y, dst)
+			pi.Pix[pi.PixOffset(x, y)] = alpha
 		}
 	}
 

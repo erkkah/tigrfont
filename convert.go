@@ -98,7 +98,7 @@ func Convert(options Options, font, target string) (int, error) {
 	}
 
 	if watermark {
-		img, err = palettize(img)
+		img, err = palettize(img.(*image.NRGBA))
 		if err != nil {
 			return 0, err
 		}
