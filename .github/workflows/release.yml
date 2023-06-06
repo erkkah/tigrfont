@@ -50,6 +50,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           files: ${{ env.ARCHIVE }}
           tag_name: ${{ github.ref }}
-          release_name: ${{ env.TAG }}
+          name: ${{ env.TAG }}
           body: ""
           draft: true
