@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/png"
 	"os"
+	"strings"
 )
 
 type Codepage int
@@ -89,11 +90,16 @@ func Convert(options Options, font, target string) (int, error) {
 	img, rendered, err = tigrFromTTF(options, fontBytes, runeSet, replaceMode, watermark)
 
 	if err != nil {
+		font = strings.ToLower(font)
+		if strings.HasSuffix(font, "ttf") || strings.HasSuffix(font, "otf") {
+			return 0, err
+		}
+
 		// Assume BDF file
 		img, rendered, err = tigrFromBDF(fontBytes, runeSet, replaceMode, watermark)
 
 		if err != nil {
-			return 0, fmt.Errorf("failed to render font")
+			return 0, fmt.Errorf("failed to render font: %v", err)
 		}
 	}
 
