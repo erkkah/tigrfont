@@ -89,6 +89,12 @@ func renderFontChars(
 	drawer.Dot.X = fixed.I(drawer.Dot.X.Ceil())
 
 	for _, r := range allRunes {
+		s := string(r)
+		bounds, _, exists := drawer.Face.GlyphBounds(r)
+		if !exists && mode == removeMissing {
+			continue
+		}
+
 		if drawer.Dot.X >= maxWidthPixels {
 			drawer.Dot.X = 0
 			drawer.Dot.Y += rowHeight
@@ -99,12 +105,6 @@ func renderFontChars(
 
 		// Skip left border / watermark
 		drawer.Dot.X += fixed.I(1)
-
-		s := string(r)
-		bounds, advance, exists := drawer.Face.GlyphBounds(r)
-		if !exists && mode == removeMissing {
-			continue
-		}
 
 		if bounds.Min.Y < minGlyphY {
 			minGlyphY = bounds.Min.Y
@@ -118,22 +118,14 @@ func renderFontChars(
 			drawer.Dot.X += -bounds.Min.X
 		}
 
-		// Draw the glyph. This adds "advance" to Dot.X.
+		charStartX := drawer.Dot.X
+
+		// Draw the glyph. This should add "advance" to Dot.X.
 		drawer.DrawString(s)
 
-		width := bounds.Max.X - bounds.Min.X
-		if width == 0 {
+		width := drawer.Dot.X - charStartX
+		if width <= 0 {
 			width = fixed.I(1)
-		}
-
-		if bounds.Min.X > 0 {
-			width += bounds.Min.X
-		} else if bounds.Min.X < 0 {
-			width -= bounds.Min.X
-		}
-
-		if advance > width {
-			width = advance
 		}
 
 		xEnd := xStart + width.Ceil() + 1
