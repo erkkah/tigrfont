@@ -89,14 +89,14 @@ func runesFromRange(lowChar, highChar int) []rune {
 		decoded := cp.DecodeByte(byte(char))
 		runeList = append(runeList, decoded)
 	}
-	return usableRunes(runeList)
+	return runeList
 }
 
 func usableRunes(runeSet []rune) []rune {
 	usable := []rune{}
 
 	for _, r := range runeSet {
-		if unicode.IsPrint(r) {
+		if unicode.IsGraphic(r) {
 			usable = append(usable, r)
 		}
 	}
